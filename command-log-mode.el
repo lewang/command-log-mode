@@ -1,4 +1,4 @@
-;;; mwe-log-commands.el --- log keyboard commands to buffer
+;;; command-log-mode.el --- log keyboard commands to buffer
 
 ;; Copyright (C) 2004  Free Software Foundation, Inc.
 
@@ -30,15 +30,15 @@
 
 ;; To enable, use e.g.:
 ;;
-;; (add-hook 'LaTeX-mode-hook (function mwe:log-keyboard-commands))
+;; (add-hook 'LaTeX-mode-hook (function clm/log-keyboard-commands))
 ;;
-;; To see the log buffer, call M-x mwe:open-command-log-buffer.
+;; To see the log buffer, call M-x clm/open-command-log-buffer.
 
 ;;; Code:
 
 (eval-when-compile (require 'cl))
 
-(defvar mwe:*log-command-exceptions*
+(defvar clm/lm*log-command-exceptions*
   '(nil self-insert-command backward-char forward-char
         delete-char delete-backward-char backward-delete-char
         backward-delete-char-untabify
@@ -51,38 +51,38 @@
   "A list commands which should not be logged, despite logging being enabled.
 Frequently used non-interesting commands (like cursor movements) should be put here.")
 
-(defvar mwe:*command-log-buffer* nil
+(defvar clm/lm*command-log-buffer* nil
   "Reference of the currenly used buffer to display logged commands.")
-(defvar mwe:*command-repetitions* 0
+(defvar clm/lm*command-repetitions* 0
   "Count of how often the last keyboard commands has been repeated.")
-(defvar mwe:*last-keyboard-command* nil
+(defvar clm/lm*last-keyboard-command* nil
   "Last logged keyboard command.")
 
 
-(defvar mwe:*log-command-indentation* 11
+(defvar clm/lm*log-command-indentation* 11
   "*Indentation of commands in command log buffer.")
 
 ;;;###autoload
-(define-minor-mode mwe-log-command-mode
+(define-minor-mode command-log-mode
   "Toggle keyboard command logging."
   :init-value nil
-  :lighter " mwe-log"
+  :lighter " command-log"
   :keymap nil)
 
-(define-global-minor-mode mwe-log-command-global-mode mwe-log-command-mode
-  mwe-log-command-mode)
+(define-global-minor-mode global-command-log-mode command-log-mode
+  command-log-mode)
 
-(defun mwe:buffer-log-command-p (cmd &optional buffer)
+(defun clm/lmbuffer-log-command-p (cmd &optional buffer)
   "Determines whether keyboard command CMD should be logged.
 If non-nil, BUFFER specifies the buffer used to determine whether CMD should be logged.
 If BUFFER is nil, the current buffer is assumed."
   (let ((val (if buffer
-		 (buffer-local-value mwe-log-command-mode buffer)
-	       mwe-log-command-mode)))
+		 (buffer-local-value command-log-mode buffer)
+	       command-log-mode)))
     (and (not (null val))
-	 (null (member cmd mwe:*log-command-exceptions*)))))
+	 (null (member cmd clm/lm*log-command-exceptions*)))))
 
-(defmacro mwe:with-saved-command-environment (&rest body)
+(defmacro clm/lmwith-saved-command-environment (&rest body)
   (declare (indent 0))
   `(let ((deactivate-mark nil) ; do not deactivate mark in transient
                                         ; mark mode
@@ -92,22 +92,22 @@ If BUFFER is nil, the current buffer is assumed."
 	 (last-command last-command))
      ,@body))
 
-(defun mwe:open-command-log-buffer (&optional arg)
+(defun clm/lmopen-command-log-buffer (&optional arg)
   "Opens (and creates, if non-existant) a buffer used for logging keyboard commands.
 If ARG is Non-nil, the existing command log buffer is cleared."
   (interactive "P")
-  (prog1 (setq mwe:*command-log-buffer* (get-buffer-create " *command-log*"))
-    (when arg (with-current-buffer mwe:*command-log-buffer*
+  (prog1 (setq clm/lm*command-log-buffer* (get-buffer-create " *command-log*"))
+    (when arg (with-current-buffer clm/lm*command-log-buffer*
 		(erase-buffer)))
-    (pop-to-buffer mwe:*command-log-buffer* nil t)))
+    (pop-to-buffer clm/lm*command-log-buffer* nil t)))
 
-(defun mwe:scroll-buffer-window (buffer &optional move-fn)
+(defun clm/lmscroll-buffer-window (buffer &optional move-fn)
   "Updates `point' of windows containing BUFFER according to MOVE-FN.
 If non-nil, MOVE-FN is called on every window which displays BUFFER.
 If nil, MOVE-FN defaults to scrolling to the bottom, making the last line visible.
 
 Scrolling up can be accomplished with:
-\(mwe:scroll-buffer-window buf (lambda () (goto-char (point-min))))
+\(clm/lmscroll-buffer-window buf (lambda () (goto-char (point-min))))
 "
   (let ((selected (selected-window))
 	(point-mover (or move-fn
@@ -119,43 +119,43 @@ Scrolling up can be accomplished with:
 				(select-window selected))))
 		  nil t)))
 
-(defmacro mwe:with-command-log-buffer (&rest body)
+(defmacro clm/lmwith-command-log-buffer (&rest body)
   (declare (indent 0))
-  `(when (and (not (null mwe:*command-log-buffer*))
-	      (buffer-name mwe:*command-log-buffer*))
-     (with-current-buffer mwe:*command-log-buffer*
+  `(when (and (not (null clm/lm*command-log-buffer*))
+	      (buffer-name clm/lm*command-log-buffer*))
+     (with-current-buffer clm/lm*command-log-buffer*
        ,@body)))
 
-(defun mwe:log-command (&optional cmd)
+(defun clm/lmlog-command (&optional cmd)
   "Hook into `pre-command-hook' to intercept command activation."
-  (mwe:with-saved-command-environment
+  (clm/lmwith-saved-command-environment
     (setq cmd (or cmd this-command))
-    (when (mwe:buffer-log-command-p cmd)
-      (mwe:with-command-log-buffer
+    (when (clm/lmbuffer-log-command-p cmd)
+      (clm/lmwith-command-log-buffer
         (let ((current (current-buffer)))
           (goto-char (point-max))
-          (cond ((eq cmd mwe:*last-keyboard-command*)
-                 (incf mwe:*command-repetitions*)
+          (cond ((eq cmd clm/lm*last-keyboard-command*)
+                 (incf clm/lm*command-repetitions*)
                  (save-match-data
-                   (when (and (> mwe:*command-repetitions* 1)
+                   (when (and (> clm/lm*command-repetitions* 1)
                               (search-backward "[" (line-beginning-position -1) t))
                      (delete-region (point) (line-end-position))))
                  (backward-char) ; skip over either ?\newline or ?\space before ?\[
                  (insert " [")
-                 (princ (1+ mwe:*command-repetitions*) current)
+                 (princ (1+ clm/lm*command-repetitions*) current)
                  (insert " times]"))
                 (t ;; (message "last cmd: %s cur: %s" last-command cmd)
-                 (setq mwe:*command-repetitions* 0)
+                 (setq clm/lm*command-repetitions* 0)
                  (insert (key-description (this-command-keys)))
-                 (when (>= (current-column) mwe:*log-command-indentation*)
+                 (when (>= (current-column) clm/lm*log-command-indentation*)
                    (newline))
-                 (move-to-column mwe:*log-command-indentation* t)
+                 (move-to-column clm/lm*log-command-indentation* t)
                  (princ cmd current)
                  (newline)
-                 (setq mwe:*last-keyboard-command* cmd)))
-          (mwe:scroll-buffer-window current))))))
+                 (setq clm/lm*last-keyboard-command* cmd)))
+          (clm/lmscroll-buffer-window current))))))
 
-(add-hook 'pre-command-hook 'mwe:log-command)
+(add-hook 'pre-command-hook 'clm/lmlog-command)
 
-(provide 'mwe-log-commands)
-;;; mwe-log-commands.el ends here
+(provide 'command-log-mode)
+;;; command-log-mode.el ends here
