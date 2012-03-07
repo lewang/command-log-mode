@@ -33,11 +33,14 @@
 
 ;; To enable, use e.g.:
 ;;
-;; (add-hook 'LaTeX-mode-hook (function clm/log-keyboard-commands))
+;; (require 'command-log-mode)
+;; (add-hook 'LaTeX-mode-hook 'command-log-mode)
 ;;
 ;; To see the log buffer, call M-x clm/open-command-log-buffer.
 
 ;;; Code:
+
+(provide 'command-log-mode)
 
 (eval-when-compile (require 'cl))
 
@@ -160,5 +163,4 @@ Scrolling up can be accomplished with:
 
 (add-hook 'pre-command-hook 'clm/log-command)
 
-(provide 'command-log-mode)
 ;;; command-log-mode.el ends here
