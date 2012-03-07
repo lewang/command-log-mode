@@ -35,23 +35,19 @@
 ;; To see the log buffer, call M-x mwe:open-command-log-buffer.
 
 ;;; Code:
-(require 'cl)
 
-(defvar mwe:*log-keyboard-commands* nil
-  "Non-nil means enabling keyboard command logging.
-This variable by default is made buffer-local.")
-(make-variable-buffer-local 'mwe:*log-keyboard-commands*)
+(eval-when-compile (require 'cl))
 
 (defvar mwe:*log-command-exceptions*
   '(nil self-insert-command backward-char forward-char
-    delete-char delete-backward-char backward-delete-char
-    backward-delete-char-untabify
-    universal-argument universal-argument-other-key
-    universal-argument-minus universal-argument-more
-    beginning-of-line end-of-line recenter
-    move-end-of-line move-beginning-of-line
-    handle-switch-frame
-    newline previous-line next-line)
+        delete-char delete-backward-char backward-delete-char
+        backward-delete-char-untabify
+        universal-argument universal-argument-other-key
+        universal-argument-minus universal-argument-more
+        beginning-of-line end-of-line recenter
+        move-end-of-line move-beginning-of-line
+        handle-switch-frame
+        newline previous-line next-line)
   "A list commands which should not be logged, despite logging being enabled.
 Frequently used non-interesting commands (like cursor movements) should be put here.")
 
@@ -67,33 +63,35 @@ Frequently used non-interesting commands (like cursor movements) should be put h
   "*Indentation of commands in command log buffer.")
 
 ;;;###autoload
-(defun mwe:log-keyboard-commands (&optional arg)
-  "Enables keyboard command logging for the current buffer.
-If optional ARG is nil, logging is turned off."
-  (interactive "P")
-  (setq mwe:*log-keyboard-commands* (or arg t)))
+(define-minor-mode mwe-log-command-mode
+  "Toggle keyboard command logging."
+  :init-value nil
+  :lighter " mwe-log"
+  :keymap nil)
+
+(define-global-minor-mode mwe-log-command-global-mode mwe-log-command-mode
+  mwe-log-command-mode)
 
 (defun mwe:buffer-log-command-p (cmd &optional buffer)
   "Determines whether keyboard command CMD should be logged.
 If non-nil, BUFFER specifies the buffer used to determine whether CMD should be logged.
 If BUFFER is nil, the current buffer is assumed."
   (let ((val (if buffer
-		 (buffer-local-value mwe:*log-keyboard-commands* buffer)
-	       mwe:*log-keyboard-commands*)))
+		 (buffer-local-value mwe-log-command-mode buffer)
+	       mwe-log-command-mode)))
     (and (not (null val))
 	 (null (member cmd mwe:*log-command-exceptions*)))))
 
 (defmacro mwe:with-saved-command-environment (&rest body)
   (declare (indent 0))
   `(let ((deactivate-mark nil) ; do not deactivate mark in transient
-			       ; mark mode
+                                        ; mark mode
 	 ;; do not let random commands scribble over
 	 ;; {THIS,LAST}-COMMAND
 	 (this-command this-command)
 	 (last-command last-command))
      ,@body))
 
-;;;###autoload
 (defun mwe:open-command-log-buffer (&optional arg)
   "Opens (and creates, if non-existant) a buffer used for logging keyboard commands.
 If ARG is Non-nil, the existing command log buffer is cleared."
@@ -128,35 +126,36 @@ Scrolling up can be accomplished with:
      (with-current-buffer mwe:*command-log-buffer*
        ,@body)))
 
-(add-hook 'pre-command-hook
-	  (defun mwe:log-command (&optional cmd)
-	    "Hook into `pre-command-hook' to intercept command activation."
-	    (mwe:with-saved-command-environment
-	      (setq cmd (or cmd this-command))
-	      (when (mwe:buffer-log-command-p cmd)
-		(mwe:with-command-log-buffer
-		  (let ((current (current-buffer)))
-		    (goto-char (point-max))
-		    (cond ((eq cmd mwe:*last-keyboard-command*)
-			   (incf mwe:*command-repetitions*)
-			   (save-match-data
-			     (when (and (> mwe:*command-repetitions* 1)
-					(search-backward "[" (line-beginning-position -1) t))
-			       (delete-region (point) (line-end-position))))
-			   (backward-char) ; skip over either ?\newline or ?\space before ?\[
-			   (insert " [")
-			   (princ (1+ mwe:*command-repetitions*) current)
-			   (insert " times]"))
-			  (t ;; (message "last cmd: %s cur: %s" last-command cmd)
-			     (setq mwe:*command-repetitions* 0)
-			     (insert (key-description (this-command-keys)))
-			     (when (>= (current-column) mwe:*log-command-indentation*)
-			       (newline))
-			     (move-to-column mwe:*log-command-indentation* t)
-			     (princ cmd current)
-			     (newline)
-			     (setq mwe:*last-keyboard-command* cmd)))
- 		    (mwe:scroll-buffer-window current)))))))
+(defun mwe:log-command (&optional cmd)
+  "Hook into `pre-command-hook' to intercept command activation."
+  (mwe:with-saved-command-environment
+    (setq cmd (or cmd this-command))
+    (when (mwe:buffer-log-command-p cmd)
+      (mwe:with-command-log-buffer
+        (let ((current (current-buffer)))
+          (goto-char (point-max))
+          (cond ((eq cmd mwe:*last-keyboard-command*)
+                 (incf mwe:*command-repetitions*)
+                 (save-match-data
+                   (when (and (> mwe:*command-repetitions* 1)
+                              (search-backward "[" (line-beginning-position -1) t))
+                     (delete-region (point) (line-end-position))))
+                 (backward-char) ; skip over either ?\newline or ?\space before ?\[
+                 (insert " [")
+                 (princ (1+ mwe:*command-repetitions*) current)
+                 (insert " times]"))
+                (t ;; (message "last cmd: %s cur: %s" last-command cmd)
+                 (setq mwe:*command-repetitions* 0)
+                 (insert (key-description (this-command-keys)))
+                 (when (>= (current-column) mwe:*log-command-indentation*)
+                   (newline))
+                 (move-to-column mwe:*log-command-indentation* t)
+                 (princ cmd current)
+                 (newline)
+                 (setq mwe:*last-keyboard-command* cmd)))
+          (mwe:scroll-buffer-window current))))))
+
+(add-hook 'pre-command-hook 'mwe:log-command)
 
 (provide 'mwe-log-commands)
 ;;; mwe-log-commands.el ends here
