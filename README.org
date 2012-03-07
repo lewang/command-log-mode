@@ -4,7 +4,7 @@ Show command history of what's going on in the buffer.
 
 ** What it look like?
 
-<dis pic>
+[[https://github.com/lewang/command-log-mode/raw/master/screenshot1.png]]
 
 ** Where it from?
 
