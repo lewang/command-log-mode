@@ -1,6 +1,6 @@
 ** What it do?
 
-Show event history and command history of buffer(s).
+Show event history and command history of some or all buffers.
 
 ** What it look like?
 
