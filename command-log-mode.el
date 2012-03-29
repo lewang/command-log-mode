@@ -40,8 +40,6 @@
 
 ;;; Code:
 
-(provide 'command-log-mode)
-
 (eval-when-compile (require 'cl))
 
 (defvar clm/log-command-exceptions*
@@ -162,5 +160,7 @@ Scrolling up can be accomplished with:
           (clm/scroll-buffer-window current))))))
 
 (add-hook 'pre-command-hook 'clm/log-command)
+
+(provide 'command-log-mode)
 
 ;;; command-log-mode.el ends here
