@@ -48,8 +48,28 @@
 
 (eval-when-compile (require 'cl))
 
+(defvar clm/log-text t
+  "A non-nil setting means text will be saved to the command log.")
+
+(defvar clm/recent-history-string ""
+  "This string will hold recently typed text.")
+
+(defun clm/recent-history ()
+  (setq clm/recent-history-string
+	(concat clm/recent-history-string
+		(buffer-substring-no-properties (- (point) 1) (point)))))
+
+(add-hook 'post-self-insert-hook 'clm/recent-history)
+
+(defun clm/zap-recent-history ()
+  (unless (eq this-original-command #'self-insert-command)
+    (setq clm/recent-history-string "")))
+
+(add-hook 'post-command-hook 'clm/zap-recent-history)
+
 (defvar clm/time-string "%Y-%m-%dT%H:%M:%S"
   "The string sent to `format-time-string' when command time is logged.")
+
 (defvar clm/log-command-exceptions*
   '(nil self-insert-command backward-char forward-char
         delete-char delete-backward-char backward-delete-char
@@ -234,6 +254,9 @@ Scrolling up can be accomplished with:
                  (princ (1+ clm/command-repetitions) current)
                  (insert " times]"))
                 (t ;; (message "last cmd: %s cur: %s" last-command cmd)
+		 (when clm/log-text
+		   (if (eq clm/last-keyboard-command 'self-insert-command)
+		       (insert "[text: " clm/recent-history-string "]\n")))
                  (setq clm/command-repetitions 0)
                  (insert
                   (propertize
