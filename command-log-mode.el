@@ -72,6 +72,9 @@
 (defvar clm/time-string "%Y-%m-%dT%H:%M:%S"
   "The string sent to `format-time-string' when command time is logged.")
 
+(defvar clm/logging-dir "~/log/"
+  "Directory in which to store files containing logged commands.")
+
 (defvar clm/log-command-exceptions*
   '(nil self-insert-command backward-char forward-char
         delete-char delete-backward-char backward-delete-char
@@ -277,6 +280,30 @@ Scrolling up can be accomplished with:
   (interactive)
   (with-current-buffer clm/command-log-buffer
     (erase-buffer)))
+
+(defun clm/save-log-line (start end)
+  "Helper function for `clm/save-command-log' to export text properties."
+  (save-excursion
+    (goto-char start)
+    (let ((time (get-text-property (point) :time)))
+      (if time
+	  (list (cons start (if time 
+				(concat "[" (get-text-property (point) :time) "] ")
+			      "")))))))
+
+(defun clm/save-command-log ()
+  "Save commands to today's log.
+Clears the command log buffer after saving."
+  (interactive)
+  (save-window-excursion
+    (set-buffer (get-buffer " *command-log*"))
+    (goto-char (point-min))
+    (let ((now (format-time-string "%Y-%m-%d"))
+	  (write-region-annotate-functions '(clm/save-log-line)))
+      (while (and (re-search-forward "^.*" nil t)
+		  (not (eobp)))
+	(append-to-file (line-beginning-position) (1+ (line-end-position)) (concat clm/logging-dir now))))
+    (clm/command-log-clear)))
 
 (add-hook 'pre-command-hook 'clm/log-command)
 
