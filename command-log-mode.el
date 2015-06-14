@@ -48,6 +48,8 @@
 
 (eval-when-compile (require 'cl))
 
+(defvar clm/time-string "%Y-%m-%dT%H:%M:%S"
+  "The string sent to `format-time-string' when command time is logged.")
 (defvar clm/log-command-exceptions*
   '(nil self-insert-command backward-char forward-char
         delete-char delete-backward-char backward-delete-char
@@ -236,7 +238,7 @@ Scrolling up can be accomplished with:
                  (insert
                   (propertize
                    (key-description (this-command-keys))
-                   :time (format-time-string "%Y-%m-%dT%H:%M:%S" (current-time))))
+                   :time  (format-time-string clm/time-string (current-time))))
                  (when (>= (current-column) clm/log-command-indentation)
                    (newline))
                  (move-to-column clm/log-command-indentation t)
