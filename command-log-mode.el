@@ -62,7 +62,9 @@
 (add-hook 'post-self-insert-hook 'clm/recent-history)
 
 (defun clm/zap-recent-history ()
-  (unless (eq this-original-command #'self-insert-command)
+  (unless (or (member this-original-command
+		      clm/log-command-exceptions*)
+	      (eq this-original-command #'self-insert-command))
     (setq clm/recent-history-string "")))
 
 (add-hook 'post-command-hook 'clm/zap-recent-history)
