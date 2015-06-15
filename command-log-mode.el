@@ -48,6 +48,33 @@
 
 (eval-when-compile (require 'cl))
 
+(defvar clm/log-text t
+  "A non-nil setting means text will be saved to the command log.")
+
+(defvar clm/recent-history-string ""
+  "This string will hold recently typed text.")
+
+(defun clm/recent-history ()
+  (setq clm/recent-history-string
+	(concat clm/recent-history-string
+		(buffer-substring-no-properties (- (point) 1) (point)))))
+
+(add-hook 'post-self-insert-hook 'clm/recent-history)
+
+(defun clm/zap-recent-history ()
+  (unless (or (member this-original-command
+		      clm/log-command-exceptions*)
+	      (eq this-original-command #'self-insert-command))
+    (setq clm/recent-history-string "")))
+
+(add-hook 'post-command-hook 'clm/zap-recent-history)
+
+(defvar clm/time-string "%Y-%m-%dT%H:%M:%S"
+  "The string sent to `format-time-string' when command time is logged.")
+
+(defvar clm/logging-dir "~/log/"
+  "Directory in which to store files containing logged commands.")
+
 (defvar clm/log-command-exceptions*
   '(nil self-insert-command backward-char forward-char
         delete-char delete-backward-char backward-delete-char
@@ -232,11 +259,14 @@ Scrolling up can be accomplished with:
                  (princ (1+ clm/command-repetitions) current)
                  (insert " times]"))
                 (t ;; (message "last cmd: %s cur: %s" last-command cmd)
+		 (when clm/log-text
+		   (if (eq clm/last-keyboard-command 'self-insert-command)
+		       (insert "[text: " clm/recent-history-string "]\n")))
                  (setq clm/command-repetitions 0)
                  (insert
                   (propertize
                    (key-description (this-command-keys))
-                   :time (format-time-string "%Y-%m-%dT%H:%M:%S" (current-time))))
+                   :time  (format-time-string clm/time-string (current-time))))
                  (when (>= (current-column) clm/log-command-indentation)
                    (newline))
                  (move-to-column clm/log-command-indentation t)
@@ -250,6 +280,30 @@ Scrolling up can be accomplished with:
   (interactive)
   (with-current-buffer clm/command-log-buffer
     (erase-buffer)))
+
+(defun clm/save-log-line (start end)
+  "Helper function for `clm/save-command-log' to export text properties."
+  (save-excursion
+    (goto-char start)
+    (let ((time (get-text-property (point) :time)))
+      (if time
+	  (list (cons start (if time 
+				(concat "[" (get-text-property (point) :time) "] ")
+			      "")))))))
+
+(defun clm/save-command-log ()
+  "Save commands to today's log.
+Clears the command log buffer after saving."
+  (interactive)
+  (save-window-excursion
+    (set-buffer (get-buffer " *command-log*"))
+    (goto-char (point-min))
+    (let ((now (format-time-string "%Y-%m-%d"))
+	  (write-region-annotate-functions '(clm/save-log-line)))
+      (while (and (re-search-forward "^.*" nil t)
+		  (not (eobp)))
+	(append-to-file (line-beginning-position) (1+ (line-end-position)) (concat clm/logging-dir now))))
+    (clm/command-log-clear)))
 
 (add-hook 'pre-command-hook 'clm/log-command)
 
