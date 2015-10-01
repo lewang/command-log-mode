@@ -117,7 +117,7 @@ Frequently used non-interesting commands (like cursor movements) should be put h
   :group 'command-log
   :type 'integer)
 
-(defcustom command-log-mode-key-binding-open-log "C-c o"
+(defcustom command-log-mode-key-binding-open-log nil
   "The key binding used to toggle the log window."
   :group 'command-log
   :type '(radio
