@@ -270,7 +270,7 @@ Scrolling up can be accomplished with:
                  (when (>= (current-column) clm/log-command-indentation)
                    (newline))
                  (move-to-column clm/log-command-indentation t)
-                 (princ cmd current)
+                 (princ (if (byte-code-function-p cmd) "<bytecode>" cmd) current)
                  (newline)
                  (setq clm/last-keyboard-command cmd)))
           (clm/scroll-buffer-window current))))))
