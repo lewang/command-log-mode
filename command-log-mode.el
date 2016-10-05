@@ -143,12 +143,11 @@ Frequently used non-interesting commands (like cursor movements) should be put h
   :lighter " command-log"
   :keymap nil
   (if command-log-mode
-      (when (and
-             command-log-mode-auto-show
-             (not (get-buffer-window clm/command-log-buffer)))
+      (when (and command-log-mode-auto-show
+                 (not (get-buffer-window clm/command-log-buffer)))
         (clm/open-command-log-buffer))
-      ;; We can close the window though
-      (clm/close-command-log-buffer)))
+    ;; We can close the window though
+    (clm/close-command-log-buffer)))
 
 (define-global-minor-mode global-command-log-mode command-log-mode
   command-log-mode)
@@ -204,23 +203,24 @@ If ARG is Non-nil, the existing command log buffer is cleared."
   "Toggle the command log showing or not."
   (interactive "P")
   (when (and command-log-mode-open-log-turns-on-mode
-             (not command-log-mode))
-    (if command-log-mode-is-global
-        (global-command-log-mode)
-        (command-log-mode)))
+             (not command-log-mode)
+             command-log-mode-is-global)
+    (global-command-log-mode)
+    (command-log-mode))
   (with-current-buffer
       (setq clm/command-log-buffer
             (get-buffer-create " *command-log*"))
     (let ((win (get-buffer-window (current-buffer))))
       (if (windowp win)
           (clm/close-command-log-buffer)
-          ;; Else open the window
-          (clm/open-command-log-buffer arg)))))
+        ;; Else open the window
+        (clm/open-command-log-buffer arg)))))
 
 (defun clm/scroll-buffer-window (buffer &optional move-fn)
   "Updates `point' of windows containing BUFFER according to MOVE-FN.
 If non-nil, MOVE-FN is called on every window which displays BUFFER.
-If nil, MOVE-FN defaults to scrolling to the bottom, making the last line visible.
+If nil, MOVE-FN defaults to scrolling to the bottom, making the last
+line visible.
 
 Scrolling up can be accomplished with:
 \(clm/scroll-buffer-window buf (lambda () (goto-char (point-min))))
@@ -260,11 +260,14 @@ Scrolling up can be accomplished with:
                  (insert " [")
                  (princ (1+ clm/command-repetitions) current)
                  (insert " times]"))
-                (t ;; (message "last cmd: %s cur: %s" last-command cmd)
-                 ;; showing accumulated text with interleaved key presses isn't very useful
-                 (when (and clm/log-text (not clm/log-repeat))
-                   (if (eq clm/last-keyboard-command 'self-insert-command)
-                       (insert "[text: " clm/recent-history-string "]\n")))
+                (t
+                 ;; (message "last cmd: %s cur: %s" last-command cmd)
+                 ;; showing accumulated text with interleaved key
+                 ;; presses isn't very useful
+                 (when (and clm/log-text
+                            (not clm/log-repeat)
+                            (eq clm/last-keyboard-command 'self-insert-command))
+                   (insert "[text: " clm/recent-history-string "]\n"))
                  (setq clm/command-repetitions 0)
                  (insert
                   (propertize
@@ -289,10 +292,11 @@ Scrolling up can be accomplished with:
   (save-excursion
     (goto-char start)
     (let ((time (get-text-property (point) :time)))
-      (if time
-          (list (cons start (if time
-                                (concat "[" (get-text-property (point) :time) "] ")
-                              "")))))))
+      (and time
+           (list (cons start
+                       (if time
+                           (concat "[" (get-text-property (point) :time) "] ")
+                         "")))))))
 
 (defun clm/save-command-log ()
   "Save commands to today's log.
