@@ -102,7 +102,8 @@ Frequently used non-interesting commands (like cursor movements) should be put h
   "*Indentation of commands in command log buffer.")
 
 (defgroup command-log nil
-  "Customization for the command log.")
+  "Customization for the command log."
+  :group 'applications)
 
 (defcustom command-log-mode-auto-show nil
   "Show the command-log window or frame automatically."
