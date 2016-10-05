@@ -93,11 +93,12 @@ should be put here.")
 
 (defvar clm/command-log-buffer nil
   "Reference of the currenly used buffer to display logged commands.")
+
 (defvar clm/command-repetitions 0
   "Count of how often the last keyboard commands has been repeated.")
+
 (defvar clm/last-keyboard-command nil
   "Last logged keyboard command.")
-
 
 (defvar clm/log-command-indentation 11
   "*Indentation of commands in command log buffer.")
