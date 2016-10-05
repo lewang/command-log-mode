@@ -56,6 +56,20 @@
 (defvar clm/recent-history-string ""
   "Recently typed text, a string.")
 
+(defvar clm/log-command-exceptions*
+  '(nil self-insert-command backward-char forward-char
+        delete-char delete-backward-char backward-delete-char
+        backward-delete-char-untabify
+        universal-argument universal-argument-other-key
+        universal-argument-minus universal-argument-more
+        beginning-of-line end-of-line recenter
+        move-end-of-line move-beginning-of-line
+        handle-switch-frame
+        newline previous-line next-line)
+  "A list of commands that should never be logged.
+Frequently used non-interesting commands (like cursor movements)
+should be put here.")
+
 (defun clm/recent-history ()
   (setq clm/recent-history-string
         (concat clm/recent-history-string
@@ -76,20 +90,6 @@
 
 (defvar clm/logging-dir "~/log/"
   "Directory in which to store files containing logged commands.")
-
-(defvar clm/log-command-exceptions*
-  '(nil self-insert-command backward-char forward-char
-        delete-char delete-backward-char backward-delete-char
-        backward-delete-char-untabify
-        universal-argument universal-argument-other-key
-        universal-argument-minus universal-argument-more
-        beginning-of-line end-of-line recenter
-        move-end-of-line move-beginning-of-line
-        handle-switch-frame
-        newline previous-line next-line)
-  "A list of commands that should never be logged.
-Frequently used non-interesting commands (like cursor movements)
-should be put here.")
 
 (defvar clm/command-log-buffer nil
   "Reference of the currenly used buffer to display logged commands.")
