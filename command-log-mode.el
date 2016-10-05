@@ -48,13 +48,13 @@
 (eval-when-compile (require 'cl))
 
 (defvar clm/log-text t
-  "A non-nil setting means text will be saved to the command log.")
+  "Whether to save text to the command log.")
 
 (defvar clm/log-repeat nil
-  "A nil setting means repetitions of the same command are merged into the single log line.")
+  "Whether to merge repetitions of the same command into the single log line.")
 
 (defvar clm/recent-history-string ""
-  "This string will hold recently typed text.")
+  "Recently typed text, a string.")
 
 (defun clm/recent-history ()
   (setq clm/recent-history-string
@@ -87,8 +87,9 @@
         move-end-of-line move-beginning-of-line
         handle-switch-frame
         newline previous-line next-line)
-  "A list commands which should not be logged, despite logging being enabled.
-Frequently used non-interesting commands (like cursor movements) should be put here.")
+  "A list of commands that should never be logged.
+Frequently used non-interesting commands (like cursor movements)
+should be put here.")
 
 (defvar clm/command-log-buffer nil
   "Reference of the currenly used buffer to display logged commands.")
@@ -277,7 +278,8 @@ Scrolling up can be accomplished with:
                  (when (>= (current-column) clm/log-command-indentation)
                    (newline))
                  (move-to-column clm/log-command-indentation t)
-                 (princ (if (byte-code-function-p cmd) "<bytecode>" cmd) current)
+                 (princ (if (byte-code-function-p cmd) "<bytecode>" cmd)
+                        current)
                  (newline)
                  (setq clm/last-keyboard-command cmd)))
           (clm/scroll-buffer-window current))))))
@@ -310,7 +312,8 @@ Clears the command log buffer after saving."
           (write-region-annotate-functions '(clm/save-log-line)))
       (while (and (re-search-forward "^.*" nil t)
                   (not (eobp)))
-        (append-to-file (line-beginning-position) (1+ (line-end-position)) (concat clm/logging-dir now))))
+        (append-to-file (line-beginning-position) (1+ (line-end-position))
+                        (concat clm/logging-dir now))))
     (clm/command-log-clear)))
 
 (add-hook 'pre-command-hook 'clm/log-command)
