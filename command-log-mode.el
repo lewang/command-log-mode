@@ -1,15 +1,14 @@
 ;;; command-log-mode.el --- log keyboard commands to buffer
 
-;; homepage: https://github.com/lewang/command-log-mode
-
-;; Copyright (C) 2013 Nic Ferrier
-;; Copyright (C) 2012 Le Wang
+;; Copyright (C) 2013  Nic Ferrier
+;; Copyright (C) 2012  Le Wang
 ;; Copyright (C) 2004  Free Software Foundation, Inc.
 
 ;; Author: Michael Weber <michaelw@foldr.org>
 ;; Keywords: help
-;; Initial-version: <2004-10-07 11:41:28 michaelw>
-;; Time-stamp: <2004-11-06 17:08:11 michaelw>
+;; Homepage: https://github.com/lewang/command-log-mode
+
+;; This file is not part of GNU Emacs.
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -34,8 +33,8 @@
 
 ;; To enable, use e.g.:
 ;;
-;; (require 'command-log-mode)
-;; (add-hook 'LaTeX-mode-hook 'command-log-mode)
+;;   (require 'command-log-mode)
+;;   (add-hook 'LaTeX-mode-hook 'command-log-mode)
 ;;
 ;; To see the log buffer, call M-x clm/open-command-log-buffer.
 
