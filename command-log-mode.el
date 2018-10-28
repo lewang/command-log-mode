@@ -37,6 +37,8 @@
 ;; (require 'command-log-mode)
 ;; (add-hook 'LaTeX-mode-hook 'command-log-mode)
 ;;
+;; To enable, call M-x command-log-mode
+;; To log globally, M-X global-command-log
 ;; To see the log buffer, call M-x clm/open-command-log-buffer.
 
 ;; The key strokes in the log are decorated with ISO9601 timestamps on
