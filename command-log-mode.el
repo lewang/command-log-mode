@@ -37,6 +37,8 @@
 ;; (require 'command-log-mode)
 ;; (add-hook 'LaTeX-mode-hook 'command-log-mode)
 ;;
+;; To enable, call M-x command-log-mode
+;; To log globally, M-X global-command-log
 ;; To see the log buffer, call M-x clm/open-command-log-buffer.
 
 ;; The key strokes in the log are decorated with ISO9601 timestamps on
@@ -104,6 +106,17 @@ Frequently used non-interesting commands (like cursor movements) should be put h
 
 (defgroup command-log nil
   "Customization for the command log.")
+
+(defface command-log-key
+  '((t (:foreground "cyan")))
+  "Face for keys in command log."
+  :group 'command-log)
+
+(defface command-log-command
+  '((t (:foreground "pale green")))
+  "Face for commands in command log."
+  :group 'command-log)
+
 
 (defcustom command-log-mode-auto-show nil
   "Show the command-log window or frame automatically."
@@ -263,18 +276,21 @@ Scrolling up can be accomplished with:
                  (insert " times]"))
                 (t ;; (message "last cmd: %s cur: %s" last-command cmd)
                  ;; showing accumulated text with interleaved key presses isn't very useful
-		 (when (and clm/log-text (not clm/log-repeat))
-		   (if (eq clm/last-keyboard-command 'self-insert-command)
-		       (insert "[text: " clm/recent-history-string "]\n")))
+                 (when (and clm/log-text (not clm/log-repeat))
+                   (if (eq clm/last-keyboard-command 'self-insert-command)
+                       (insert "[text: " clm/recent-history-string "]\n")))
                  (setq clm/command-repetitions 0)
                  (insert
                   (propertize
                    (key-description (this-command-keys))
-                   :time  (format-time-string clm/time-string (current-time))))
+                   :time  (format-time-string clm/time-string (current-time))
+                   'face 'command-log-key))
                  (when (>= (current-column) clm/log-command-indentation)
                    (newline))
                  (move-to-column clm/log-command-indentation t)
-                 (princ (if (byte-code-function-p cmd) "<bytecode>" cmd) current)
+                 ;;(princ (if (byte-code-function-p cmd) "<bytecode>" cmd) current)
+                 (insert (propertize (format "%s" cmd)
+                                     'face 'command-log-command))
                  (newline)
                  (setq clm/last-keyboard-command cmd)))
           (clm/scroll-buffer-window current))))))
