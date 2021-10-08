@@ -132,6 +132,11 @@ Frequently used non-interesting commands (like cursor movements) should be put h
   :group 'command-log
   :type 'boolean)
 
+(defcustom command-log-mode-close-log-turns-off-mode nil
+  "Does closing the command log turn off the mode?"
+  :group 'command-log
+  :type 'boolean)
+
 (defcustom command-log-mode-is-global nil
   "Does turning on command-log-mode happen globally?"
   :group 'command-log
@@ -207,16 +212,23 @@ If ARG is Non-nil, the existing command log buffer is cleared."
   (when (and command-log-mode-open-log-turns-on-mode
              (not command-log-mode))
     (if command-log-mode-is-global
-        (global-command-log-mode)
-        (command-log-mode)))
+        (global-command-log-mode t)
+      (command-log-mode t)))
+
   (with-current-buffer
       (setq clm/command-log-buffer
             (get-buffer-create " *command-log*"))
     (let ((win (get-buffer-window (current-buffer))))
       (if (windowp win)
-          (clm/close-command-log-buffer)
-          ;; Else open the window
-          (clm/open-command-log-buffer arg)))))
+          (progn
+            (when (and command-log-mode-close-log-turns-off-mode
+                       (command-log-mode))
+              (if command-log-mode-is-global
+                  (global-command-log-mode nil)
+                (command-log-mode nil)))
+            (clm/close-command-log-buffer))
+        ;; Else open the window
+        (clm/open-command-log-buffer arg)))))
 
 (defun clm/scroll-buffer-window (buffer &optional move-fn)
   "Updates `point' of windows containing BUFFER according to MOVE-FN.
