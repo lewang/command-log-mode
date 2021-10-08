@@ -258,23 +258,31 @@ Scrolling up can be accomplished with:
                               (search-backward "[" (line-beginning-position -1) t))
                      (delete-region (point) (line-end-position))))
                  (backward-char) ; skip over either ?\newline or ?\space before ?\[
-                 (insert " [")
-                 (princ (1+ clm/command-repetitions) current)
-                 (insert " times]"))
+                 (insert (propertize (concat
+                                      " ["
+                                      (number-to-string (1+ clm/command-repetitions))
+                                      " times]")
+                                     'face 'font-lock-doc-face)))
                 (t ;; (message "last cmd: %s cur: %s" last-command cmd)
                  ;; showing accumulated text with interleaved key presses isn't very useful
-		 (when (and clm/log-text (not clm/log-repeat))
-		   (if (eq clm/last-keyboard-command 'self-insert-command)
-		       (insert "[text: " clm/recent-history-string "]\n")))
+        	 (when (and clm/log-text (not clm/log-repeat))
+        	   (if (eq clm/last-keyboard-command 'self-insert-command)
+        	       (insert (propertize
+                                (concat "[text: " clm/recent-history-string "]\n")
+                                'face 'font-lock-doc-face))))
                  (setq clm/command-repetitions 0)
                  (insert
                   (propertize
                    (key-description (this-command-keys))
-                   :time  (format-time-string clm/time-string (current-time))))
+                   :time  (format-time-string clm/time-string (current-time))
+                   'face 'font-lock-keyword-face))
                  (when (>= (current-column) clm/log-command-indentation)
                    (newline))
                  (move-to-column clm/log-command-indentation t)
-                 (princ (if (byte-code-function-p cmd) "<bytecode>" cmd) current)
+                 (insert
+                  (propertize
+                   (if (byte-code-function-p cmd) "<bytecode>" (symbol-name cmd))
+                   'face 'font-lock-function-name-face))
                  (newline)
                  (setq clm/last-keyboard-command cmd)))
           (clm/scroll-buffer-window current))))))
