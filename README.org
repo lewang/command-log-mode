@@ -6,6 +6,28 @@ Show event history and command history of some or all buffers.
 
 [[https://github.com/lewang/command-log-mode/raw/master/screenshot1.png]]
 
+** How do I use it?
+
+   Use the =clm/toggle-command-log-buffer= command.  This use-package
+   configuration will configure this command to log globally, including the
+   mininbuffer, and to disable the global minor mode when you toggle while the
+   buffer is visible.  Customize the =command-log= group for more options.
+
+   #+begin_src elisp
+
+     (use-package command-log-mode
+        :custom
+        (command-log-mode-window-font-size 20)
+        (command-log-mode-open-log-turns-on-mode t "Show buffer enables mode")
+        (command-log-mode-close-log-turns-off-mode t "Show buffer disables mode")
+        (command-log-mode-is-global "Auto-enable with global minor mode (including minibuffer)")
+        :config
+
+        ;; Be chatty.  Show everything besides self-insert-command
+        (setq clm/log-command-exceptions* '(self-insert-command)))
+
+   #+end_src
+
 ** Where it from?
 
 This package is a fork of [[http://www.foldr.org/~michaelw/emacs/mwe-log-commands.el][mwe-log-commands.el]] by Michael Weber <michaelw@foldr.org>

@@ -105,7 +105,7 @@ Frequently used non-interesting commands (like cursor movements) should be put h
 (defgroup command-log nil
   "Customization for the command log.")
 
-(defcustom command-log-mode-auto-show nil
+(defcustom command-log-mode-auto-show t
   "Show the command-log window or frame automatically."
   :group 'command-log
   :type 'boolean)
@@ -127,17 +127,17 @@ Frequently used non-interesting commands (like cursor movements) should be put h
           (const :tag "No key" nil)
           (key-sequence "C-c o"))) ;; this is not right though it works for kbd
 
-(defcustom command-log-mode-open-log-turns-on-mode nil
+(defcustom command-log-mode-open-log-turns-on-mode t
   "Does opening the command log turn on the mode?"
   :group 'command-log
   :type 'boolean)
 
-(defcustom command-log-mode-close-log-turns-off-mode nil
+(defcustom command-log-mode-close-log-turns-off-mode t
   "Does closing the command log turn off the mode?"
   :group 'command-log
   :type 'boolean)
 
-(defcustom command-log-mode-is-global nil
+(defcustom command-log-mode-is-global t
   "Does turning on command-log-mode happen globally?"
   :group 'command-log
   :type 'boolean)
